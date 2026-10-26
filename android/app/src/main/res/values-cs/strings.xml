@@ -610,4 +610,10 @@
          tls_unknown_host stands in for an address. Written in Kotlin before, so
          one English word survived inside an otherwise translated About dialog. -->
     <string name="about_version_unknown">neznámá</string>
+
+    <!-- VSDroid interface size -->
+    <string name="key_ui_size">Velikost rozhraní</string>
+    <string name="ui_size_title">Velikost rozhraní</string>
+    <string name="ui_size_applied">Velikost rozhraní nastavena na %1$d%%</string>
+    <string name="ui_size_failed">Tento WebView ponechal %1$d%%</string>
 </resources>

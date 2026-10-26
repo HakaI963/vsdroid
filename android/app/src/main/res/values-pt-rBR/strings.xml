@@ -606,4 +606,10 @@
          tls_unknown_host stands in for an address. Written in Kotlin before, so
          one English word survived inside an otherwise translated About dialog. -->
     <string name="about_version_unknown">desconhecida</string>
+
+    <!-- VSDroid interface size -->
+    <string name="key_ui_size">Tamanho da interface</string>
+    <string name="ui_size_title">Tamanho da interface</string>
+    <string name="ui_size_applied">Tamanho da interface definido como %1$d%%</string>
+    <string name="ui_size_failed">Este WebView manteve %1$d%%</string>
 </resources>
