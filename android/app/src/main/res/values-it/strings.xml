@@ -8,7 +8,7 @@
          rather than the server's, because no server is running yet and the whole
          point of the hold is that the process survives a user who leaves. -->
     <string name="notification_title_setup">Configurazione di VSCodroid</string>
-    <string name="notification_text_setup">Estrazione dell\'editor e dei suoi strumenti. Richiede qualche minuto e avviene una sola volta.</string>
+    <string name="notification_text_setup">Estrazione dell’editor e dei suoi strumenti. Richiede qualche minuto e avviene una sola volta.</string>
     <string name="notification_text">Server di sviluppo locale attivo</string>
     <!-- There was a second line here, shown when the server was adopted rather
          than started, telling the user the session had no network and to tap
@@ -26,7 +26,7 @@
          strings above in the same notification, which then carries no Stop
          action because there is nothing left to stop. -->
     <string name="notification_title_stopped">Server VSCodroid arrestato</string>
-    <string name="notification_text_stopped">Arresti anomali ripetuti del server. Riavvia l\'app.</string>
+    <string name="notification_text_stopped">Arresti anomali ripetuti del server. Riavvia l’app.</string>
     <string name="extracting_message">Estrazione dei file principali\u2026</string>
 
     <!-- The steps first-run setup reports while it unpacks, shown under the
@@ -41,10 +41,10 @@
     <string name="setup_step_git">Preparazione di git\u2026</string>
     <string name="setup_step_symlinks">Preparazione degli strumenti\u2026</string>
     <string name="setup_step_extensions">Preparazione delle estensioni\u2026</string>
-    <string name="setup_step_environment">Impostazione dell\'ambiente\u2026</string>
+    <string name="setup_step_environment">Impostazione dell’ambiente\u2026</string>
     <string name="setup_step_done">Fatto!</string>
     <string name="error_server_start">Impossibile avviare il server di sviluppo</string>
-    <string name="error_server_timeout">L\'avvio del server ha richiesto troppo tempo</string>
+    <string name="error_server_timeout">L’avvio del server ha richiesto troppo tempo</string>
 
     <!-- Deliberately not an error_ string, and deliberately not the wording of
          the one above it. This is said while the server is still being waited
@@ -56,7 +56,7 @@
          It also has to survive being read later. The next activity to bind
          reads it through NodeService.lastStartupNotice() with no idea how long
          ago it was recorded, so it says nothing about elapsed time. -->
-    <string name="status_server_slow_start">L\'avvio del server di sviluppo sta richiedendo più tempo del solito. L\'editor si aprirà appena sarà pronto.</string>
+    <string name="status_server_slow_start">L’avvio del server di sviluppo sta richiedendo più tempo del solito. L’editor si aprirà appena sarà pronto.</string>
     <string name="status_updating_python">Aggiornamento di Python…</string>
     <!-- Says what happened and what to do about it, and deliberately does not
          claim to have diagnosed anything. The app cannot tell an out-of-memory
@@ -69,7 +69,7 @@
          settings.json inside the editor, which is the surface this message is
          about to become reachable again, and a user who is not told which
          setting to look for has nothing to search on. -->
-    <string name="heap_override_suspended">Il limite di memoria personalizzato in settings.json è stato disattivato dopo ripetuti arresti anomali. Modifica vscodroid.server.heapCeilingMb e riavvia l\'app per provare un valore diverso.</string>
+    <string name="heap_override_suspended">Il limite di memoria personalizzato in settings.json è stato disattivato dopo ripetuti arresti anomali. Modifica vscodroid.server.heapCeilingMb e riavvia l’app per provare un valore diverso.</string>
     <!-- The figure is passed in rather than written here, and it is the
          SHORTFALL the refusal measured, not the size of the unpack: this asks
          the user to free it, and what they have to free is what the device is
@@ -85,13 +85,13 @@
          told the button is there; "try again" left them looking for a gesture
          that does not exist. -->
     <string name="error_storage_full">Spazio di archiviazione insufficiente. Libera almeno %1$d MB, poi tocca Riprova.</string>
-    <string name="error_setup_failed">Configurazione non riuscita. Tocca Riprova o reinstalla l\'app.</string>
+    <string name="error_setup_failed">Configurazione non riuscita. Tocca Riprova o reinstalla l’app.</string>
     <!-- The same failure when setup knows which step it died on. Names the step
          and quotes the exception, because the audience is developers and the
          next thing they do is either free some space or file the message. The
          version without a cause stays for a failure that happens before the
          first progress report. -->
-    <string name="error_setup_failed_at">Configurazione non riuscita durante: %1$s\n\n%2$s\n\nTocca Riprova, oppure reinstalla l\'app se l\'errore persiste.</string>
+    <string name="error_setup_failed_at">Configurazione non riuscita durante: %1$s\n\n%2$s\n\nTocca Riprova, oppure reinstalla l’app se l’errore persiste.</string>
 
     <!-- A tap on a link this app handed to Android that no app took. Names the
          scheme rather than the whole address, which can be long and can carry a
@@ -103,8 +103,8 @@
          type is quoted because the audience is developers and it is the part
          worth putting in a bug report. -->
     <string name="url_handoff_failed">Impossibile aprire quel link %1$s (%2$s).</string>
-    <string name="sign_in_not_ready">L\'editor non è pronto per questo accesso. Ricarica l\'editor e riprova.</string>
-    <string name="sign_in_not_issued">L\'editor non ha avviato questo accesso. Riprova.</string>
+    <string name="sign_in_not_ready">L’editor non è pronto per questo accesso. Ricarica l’editor e riprova.</string>
+    <string name="sign_in_not_issued">L’editor non ha avviato questo accesso. Riprova.</string>
 
     <!-- A page inside the editor asked for an https address the WebView would not
          load: a dev server previewed in the Simple Browser, an image in a preview,
@@ -137,20 +137,20 @@
     <string name="tls_blocked_date">Bloccato %1$s: certificato scaduto o non ancora valido.</string>
     <string name="tls_blocked_invalid">Bloccato %1$s: impossibile convalidare il certificato.</string>
     <string name="tls_blocked_handshake">Bloccato %1$s: impossibile negoziare la connessione sicura.</string>
-    <string name="tls_unknown_host">quell\'indirizzo</string>
+    <string name="tls_unknown_host">quell’indirizzo</string>
 
     <!-- Shown on the page itself, not in a toast, when the restart budget is
          spent. The screen behind it read "Starting server..." and went on
          reading that for ever, so the only thing it said was the only thing
          that was no longer true. -->
-    <string name="error_server_gave_up">Il server di sviluppo si è arrestato e non è stato possibile riavviarlo. I tuoi file sono al sicuro. Di solito basta riprovare; se non funziona, chiudi e riapri l\'app.</string>
+    <string name="error_server_gave_up">Il server di sviluppo si è arrestato e non è stato possibile riavviarlo. I tuoi file sono al sicuro. Di solito basta riprovare; se non funziona, chiudi e riapri l’app.</string>
     <string name="error_server_retry">Riprova</string>
     <!-- The first screen of every cold start, inside the placeholder page
          MainActivity draws while the server comes up. -->
     <string name="server_starting">Avvio del server…</string>
     <!-- Shown on the page, with the reload control, once the editor's renderer
          has died several times in a minute and the app stops reopening it. -->
-    <string name="error_renderer_crash_loop">L\'editor si è chiuso in modo imprevisto più volte di seguito, quindi VSCodroid ha smesso di riaprirlo. I tuoi file e il server sono intatti. Chiudere prima qualche altra app rende il problema meno probabile.</string>
+    <string name="error_renderer_crash_loop">L’editor si è chiuso in modo imprevisto più volte di seguito, quindi VSCodroid ha smesso di riaprirlo. I tuoi file e il server sono intatti. Chiudere prima qualche altra app rende il problema meno probabile.</string>
     <string name="legal_disclaimer">VSCodroid è compilato dal codice sorgente di Code - OSS, con licenza MIT.\nNon è affiliato a Microsoft Corporation né da essa approvato.\n\"Visual Studio Code\" e \"VS Code\" sono marchi di Microsoft.\nUtilizza il registro di estensioni Open VSX, non il Microsoft Marketplace.</string>
 
     <!-- About dialog -->
@@ -165,7 +165,7 @@
 
     <!-- Toolchain picker (first-run) -->
     <string name="picker_title">Con cosa programmi?</string>
-    <string name="picker_subtitle">Facoltativo. Tocca e tieni premuta l\'icona dell\'app per aggiungerle o rimuoverle in seguito.</string>
+    <string name="picker_subtitle">Facoltativo. Tocca e tieni premuta l’icona dell’app per aggiungerle o rimuoverle in seguito.</string>
     <string name="picker_included">Node.js, Python e Git sono già inclusi.</string>
     <string name="picker_continue">Continua</string>
     <string name="picker_skip">Ignora</string>
@@ -189,7 +189,7 @@
          thing they can do about it; ToolchainFailure decides which one is shown. -->
     <string name="toolchain_failed_network">Download non riuscito. Controlla la connessione e riprova.</string>
     <string name="toolchain_failed_storage">Spazio di archiviazione insufficiente. Libera spazio e riprova.</string>
-    <string name="toolchain_failed_not_published">Questa toolchain non è inclusa nella versione attuale. Riprova dopo il prossimo aggiornamento dell\'app.</string>
+    <string name="toolchain_failed_not_published">Questa toolchain non è inclusa nella versione attuale. Riprova dopo il prossimo aggiornamento dell’app.</string>
     <string name="toolchain_failed_digest">Il download non corrisponde a quanto pubblicato nella release. Riprova.</string>
     <string name="toolchain_failed_corrupt">Il download è incompleto. Riprova.</string>
     <string name="toolchain_failed_play">Play distribuisce questa toolchain solo alle app che ha installato. Installa dal Play Store e riprova.</string>
@@ -197,7 +197,7 @@
          already running. Not a failure: the toolchain is on its way in, by the install
          that got there first, and the only thing the user needs is to stop tapping. -->
     <string name="toolchain_already_installing">Quella toolchain è già in fase di installazione.</string>
-    <string name="toolchain_failed_internal">Installazione non riuscita. I dettagli sono nel log dell\'app.</string>
+    <string name="toolchain_failed_internal">Installazione non riuscita. I dettagli sono nel log dell’app.</string>
     <string name="progress_cancel">Annulla</string>
     <string name="progress_retry">Riprova</string>
 
@@ -227,45 +227,45 @@
     <!-- Shown when a save could not be written out to the device folder. Names the
          consequence rather than the error: the user's next decision is whether to
          copy the file out before uninstalling, not which exception was thrown. -->
-    <string name="saf_write_back_failed">%1$s non è arrivato nella cartella del dispositivo. L\'unica copia è dentro VSCodroid.</string>
+    <string name="saf_write_back_failed">%1$s non è arrivato nella cartella del dispositivo. L’unica copia è dentro VSCodroid.</string>
 
     <!-- Shown once after a folder opens when documents in it could not be copied into
          the editor: a provider error, or no room left. The opposite of
          saf_write_back_failed on purpose. There the app holds the only copy; here the
          device does, and the file is simply absent from the editor. -->
     <plurals name="saf_documents_not_copied">
-        <item quantity="one">Impossibile copiare un file nell\'editor. Resta invariato nella cartella del dispositivo.</item>
-        <item quantity="many">Impossibile copiare %1$d file nell\'editor. Restano invariati nella cartella del dispositivo.</item>
-        <item quantity="other">Impossibile copiare %1$d file nell\'editor. Restano invariati nella cartella del dispositivo.</item>
+        <item quantity="one">Impossibile copiare un file nell’editor. Resta invariato nella cartella del dispositivo.</item>
+        <item quantity="many">Impossibile copiare %1$d file nell’editor. Restano invariati nella cartella del dispositivo.</item>
+        <item quantity="other">Impossibile copiare %1$d file nell’editor. Restano invariati nella cartella del dispositivo.</item>
     </plurals>
     <!-- The same shortfall when the sizes the provider reported did not fit in the space
          left. Named separately because it is the one the user can act on. -->
     <plurals name="saf_documents_not_copied_no_room">
-        <item quantity="one">Spazio insufficiente: impossibile copiare un file nell\'editor. Resta invariato nella cartella del dispositivo.</item>
-        <item quantity="many">Spazio insufficiente: impossibile copiare %1$d file nell\'editor. Restano invariati nella cartella del dispositivo.</item>
-        <item quantity="other">Spazio insufficiente: impossibile copiare %1$d file nell\'editor. Restano invariati nella cartella del dispositivo.</item>
+        <item quantity="one">Spazio insufficiente: impossibile copiare un file nell’editor. Resta invariato nella cartella del dispositivo.</item>
+        <item quantity="many">Spazio insufficiente: impossibile copiare %1$d file nell’editor. Restano invariati nella cartella del dispositivo.</item>
+        <item quantity="other">Spazio insufficiente: impossibile copiare %1$d file nell’editor. Restano invariati nella cartella del dispositivo.</item>
     </plurals>
     <!-- A directory deleted in the editor that was left standing in the device folder,
          because it holds documents that never reached the editor and deleting the
          directory would have taken them with it. Names the device as where the files
          are: the local copy is gone, so saf_write_back_failed's "the only copy is
          inside VSCodroid" would be backwards here. -->
-    <string name="saf_directory_kept">%1$s è stata mantenuta nella cartella del dispositivo: contiene file mai copiati nell\'editor. Eliminala lì se non ti servono più.</string>
+    <string name="saf_directory_kept">%1$s è stata mantenuta nella cartella del dispositivo: contiene file mai copiati nell’editor. Eliminala lì se non ti servono più.</string>
 
     <!-- The same refusal one level down: a single document that never reached the
          editor, deleted in the editor anyway. Worded apart from saf_directory_kept
          because that one says the thing holds files, which is false of a file, and
          apart from saf_write_back_failed because the app holds nothing here at all. -->
-    <string name="saf_document_kept">%1$s è stato mantenuto nella cartella del dispositivo: l\'editor non ne ha mai avuto una copia. Eliminalo lì se non ti serve più.</string>
+    <string name="saf_document_kept">%1$s è stato mantenuto nella cartella del dispositivo: l’editor non ne ha mai avuto una copia. Eliminalo lì se non ti serve più.</string>
 
     <!-- The same refusal for a file the editor did have and the user deleted, kept
          because the device's version may have changed since the editor last read or
          saved it, as another app's edit does. saf_document_kept would tell that user the
          editor never had the file they just deleted in it. -->
-    <string name="saf_document_changed_kept">%1$s è stato mantenuto nella cartella del dispositivo: un\'altra app potrebbe averlo modificato da quando l\'editor lo ha letto o salvato l\'ultima volta. Eliminalo lì se non ti serve più.</string>
+    <string name="saf_document_changed_kept">%1$s è stato mantenuto nella cartella del dispositivo: un’altra app potrebbe averlo modificato da quando l’editor lo ha letto o salvato l’ultima volta. Eliminalo lì se non ti serve più.</string>
     <!-- A directory deleted in the editor that holds such a file, and no file the editor
          never had, which is what saf_directory_kept says. -->
-    <string name="saf_directory_changed_kept">%1$s è stata mantenuta nella cartella del dispositivo: un\'altra app potrebbe aver modificato un file al suo interno da quando l\'editor lo ha letto o salvato l\'ultima volta. Eliminala lì se non ti serve più.</string>
+    <string name="saf_directory_changed_kept">%1$s è stata mantenuta nella cartella del dispositivo: un’altra app potrebbe aver modificato un file al suo interno da quando l’editor lo ha letto o salvato l’ultima volta. Eliminala lì se non ti serve più.</string>
     <string name="saf_delete_refused">Non è stato possibile eliminare %1$s dalla cartella del dispositivo, quindi ricomparirà alla prossima apertura della cartella. Eliminalo nel gestore file del dispositivo.</string>
 
     <!-- Removing the local copy of a device folder, from the storage screen. The
@@ -296,7 +296,7 @@
          back across the bridge and the bundled extension shows them verbatim, so they
          are the user's whole explanation for a removal that did not happen. Each names
          the thing that has to change first; none of them invites a bare retry. -->
-    <string name="saf_mirror_folder_open">Quella cartella è aperta nell\'editor. Apri prima un\'altra cartella.</string>
+    <string name="saf_mirror_folder_open">Quella cartella è aperta nell’editor. Apri prima un’altra cartella.</string>
     <string name="saf_mirror_folder_opening">Quella cartella è ancora in apertura.</string>
     <!-- The widest of the three. A write-back drain outlives the folder switch that
          stopped it and can still be streaming out of the copy, so a restart is what
@@ -317,12 +317,12 @@
          its own sentence: bridge_stale_session above tells the reader to reload the
          window, which does not drain that thread and costs them their editor state on the
          way to waiting exactly as long. Named by AndroidBridge.STORAGE_BUSY. -->
-    <string name="bridge_storage_busy">VSCodroid sta elaborando un\'altra richiesta di archiviazione. Riprova tra poco.</string>
+    <string name="bridge_storage_busy">VSCodroid sta elaborando un’altra richiesta di archiviazione. Riprova tra poco.</string>
     <!-- No Activity wired the removal callback, so nothing could have been removed.
          Distinct from a refusal with a reason: this is a mistake in the app rather
          than a state the user can act on, and saying "that folder is in use" would
          send them looking for a folder to close. -->
-    <string name="bridge_reclaim_unavailable">Al momento VSCodroid non può gestire l\'archiviazione delle cartelle del dispositivo.</string>
+    <string name="bridge_reclaim_unavailable">Al momento VSCodroid non può gestire l’archiviazione delle cartelle del dispositivo.</string>
     <!-- Nothing on the device claimed the link. The one refusal the user can act on. -->
     <string name="open_url_no_handler">VSCodroid non lo ha aperto. Nessuna app su questo dispositivo gestisce quel link.</string>
     <!-- Every other launch failure, with the class name of the exception substituted. The
@@ -350,7 +350,7 @@
          way back out of that screen. Without it a screen reader announces an
          unlabelled button: setSupportActionBar is never called, so the framework's
          own "Navigate up" default never applies. -->
-    <string name="toolchain_navigate_up">Torna all\'editor</string>
+    <string name="toolchain_navigate_up">Torna all’editor</string>
 
     <!-- What the toolchain picker's card says the toolchain is for. Held here
          rather than in ToolchainRegistry.ToolchainInfo, which is where the rest
@@ -361,7 +361,7 @@
          strings on purpose; "Ruby" and "Java 21" are the products' own names. -->
     <string name="toolchain_ruby_description">Ruby con irb, gem, bundler</string>
     <string name="toolchain_java_description">OpenJDK 21 (javac, jar, jshell)</string>
-    <string name="toolchain_cpp_description">C e C++ (clang, lld). Richiede l\'interceptor exec del terminale: non funziona con LD_PRELOAD impostato su null.</string>
+    <string name="toolchain_cpp_description">C e C++ (clang, lld). Richiede l’interceptor exec del terminale: non funziona con LD_PRELOAD impostato su null.</string>
 
     <!-- The checkmark on a selected toolchain card. It is an ImageView with no
          text, so this is the whole of what a screen reader has to announce it. -->
@@ -426,8 +426,8 @@
          user's doing: one is the editor having restarted underneath the browser,
          the other the callback arriving after its window closed. Both end in the
          same instruction because retrying is genuinely all there is to do. -->
-    <string name="sign_in_editor_restarted">Impossibile completare l\'accesso: l\'editor è stato riavviato. Accedi di nuovo.</string>
-    <string name="sign_in_timed_out">L\'accesso ha richiesto troppo tempo. Accedi di nuovo.</string>
+    <string name="sign_in_editor_restarted">Impossibile completare l’accesso: l’editor è stato riavviato. Accedi di nuovo.</string>
+    <string name="sign_in_timed_out">L’accesso ha richiesto troppo tempo. Accedi di nuovo.</string>
 
     <!-- The About dialog's body: the version line and the legal disclaimer, which
          are separate resources because only one of them is a sentence. Joined
@@ -447,7 +447,7 @@
          message because the audience is developers, and truncated by the caller
          before it arrives. -->
     <string name="crash_title">Arresto anomalo di VSCodroid</string>
-    <string name="crash_message">L\'app si è arrestata in modo anomalo in una sessione precedente.\n\n%1$s</string>
+    <string name="crash_message">L’app si è arrestata in modo anomalo in una sessione precedente.\n\n%1$s</string>
     <string name="crash_dismiss">Chiudi</string>
     <string name="crash_copy_report">Copia report</string>
     <string name="crash_report_copied">Report di errore copiato negli appunti</string>
@@ -608,8 +608,8 @@
     <string name="about_version_unknown">sconosciuta</string>
 
     <!-- VSDroid interface size -->
-    <string name="key_ui_size">Dimensione dell'interfaccia</string>
-    <string name="ui_size_title">Dimensione dell'interfaccia</string>
-    <string name="ui_size_applied">Dimensione dell'interfaccia impostata su %1$d%%</string>
+    <string name="key_ui_size">Dimensione dell’interfaccia</string>
+    <string name="ui_size_title">Dimensione dell’interfaccia</string>
+    <string name="ui_size_applied">Dimensione dell’interfaccia impostata su %1$d%%</string>
     <string name="ui_size_failed">Questo WebView ha mantenuto il %1$d%%</string>
 </resources>
