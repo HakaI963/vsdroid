@@ -8102,7 +8102,14 @@ internal fun uiScaleScript(): String =
         if (window.top !== window || location.pathname !== '/' ||
             (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost')) return;
         var KEY = 'vscodroid.uiScale';
-        var SCALES = [1, 1.1, 1.25, 1.5];
+        // 1/3 is the default on this fork: the workbench's chrome is drawn for a
+        // desktop pointer, and at 100% a phone in landscape still loses most of
+        // its menus off the right edge. At 0.333 the page is laid out three
+        // times as wide and drawn at a third of the size, which is what fits the
+        // whole workbench on the screen. The larger sizes stay available for
+        // anyone who wants the old density back.
+        var SCALES = [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25, 1.5];
+        var DEFAULT_SCALE = 0.3333333333;
         // The narrowest the page may get at a size offered, in CSS px. At 329, a
         // 411 dp phone at 125%, the editor beside an open side bar was 111 wide.
         var MIN_WIDTH = 320;
@@ -8150,7 +8157,7 @@ internal fun uiScaleScript(): String =
                 requestAnimationFrame(function() {
                     if (s === current && s !== 1 && !tookEffect(s)) {
                         console.warn('[VSCodroid] UI scale ' + s + ' did not take effect, back to 100%');
-                        localStorage.removeItem(KEY);
+                        localStorage.setItem(KEY, '1');
                         current = 1;
                         apply(1);
                     }
@@ -8164,8 +8171,7 @@ internal fun uiScaleScript(): String =
             state: function() { return { scale: current, choices: offered() }; },
             set: function(s, done) {
                 if (offered().indexOf(s) < 0) { done(current); return; }
-                if (s === 1) localStorage.removeItem(KEY);
-                else localStorage.setItem(KEY, String(s));
+                localStorage.setItem(KEY, String(s));
                 current = s;
                 apply(s);
                 settle(s, done);
@@ -8173,8 +8179,11 @@ internal fun uiScaleScript(): String =
         };
 
         // The size chosen, or the largest under it that this screen still allows.
-        var chosen = Number(localStorage.getItem(KEY));
-        current = offered().filter(function(s) { return s <= chosen; }).pop() || 1;
+        // Nothing stored means a fresh install, which starts at 1/3 rather than
+        // at 100%: this fork exists to make the workbench fit a phone.
+        var stored = localStorage.getItem(KEY);
+        var chosen = stored === null ? DEFAULT_SCALE : Number(stored);
+        current = offered().filter(function(s) { return s <= chosen; }).pop() || DEFAULT_SCALE;
         if (current === 1) return;
         // As the parser inserts the element, which is before the first layout.
         var watch = new MutationObserver(function() {

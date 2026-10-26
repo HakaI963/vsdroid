@@ -133,6 +133,7 @@
         <activity
             android:name=".SplashActivity"
             android:exported="true"
+            android:screenOrientation="sensorLandscape"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|screenLayout|smallestScreenSize|uiMode"
             android:theme="@style/Theme.VSCodroid">
             <intent-filter>
@@ -145,6 +146,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="sensorLandscape"
             android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|screenLayout|smallestScreenSize|uiMode|density"
             android:windowSoftInputMode="adjustResize"
@@ -181,6 +183,7 @@
         <activity
             android:name=".ToolchainActivity"
             android:exported="false"
+            android:screenOrientation="sensorLandscape"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.VSCodroid" />
 

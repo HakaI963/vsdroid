@@ -238,18 +238,25 @@ for (const [label, where] of [
     );
 }
 
-// Nothing stored, the default: the page is not touched and not watched, and the
-// hook answers 100% with the sizes this phone is offered.
+// Nothing stored, the default: this fork draws the workbench at 1/3 and offers
+// the larger sizes as well, so a fresh install fits a landscape phone.
 {
     const page = newPage();
     page.parse();
     page.loaded();
+    page.frame();
+    page.frame();
     assert.ok(page.hook, 'the workbench page has no hook, so the command has nothing to talk to');
-    assert.deepStrictEqual(page.state(), { scale: 1, choices: [1, 1.1, 1.25] },
-        'a 411 dp phone with nothing chosen must be at 100% and offered 100, 110 and 125%');
-    assert.ok(page.observers.length === 0 && page.writes.length === 0 && page.queuedFrames === 0,
-        'with no size chosen the page must be left exactly as the workbench wrote it: ' +
-        JSON.stringify(page.writes));
+    assert.deepStrictEqual(
+        page.state(),
+        { scale: 0.3333333333, choices: [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25] },
+        'a 411 dp phone with nothing chosen must be at 33% and offered 33, 50, 67, 100, 110 and 125%',
+    );
+    assert.ok(page.writes.length === 1 && page.state().scale === 0.3333333333 &&
+            page.warnings.length === 0,
+        'the default size was not applied once, or was undone: ' + JSON.stringify(page.writes));
+    assert.strictEqual(keys(page.content)['initial-scale'], '0.3333333333',
+        'the default size did not reach the viewport element: ' + page.content);
 }
 
 // A size chosen earlier is applied as the parser inserts the element, which is
@@ -301,12 +308,12 @@ for (const [label, where] of [
 // cannot make it narrower than that. A size chosen on a wider screen is kept and
 // the largest this one allows is applied.
 for (const [screen, choices] of [
-    [[411, 891], [1, 1.1, 1.25]],
-    [[891, 411], [1, 1.1, 1.25]],
-    [[360, 780], [1, 1.1]],
-    [[352, 760], [1, 1.1]],
-    [[351, 760], [1]],
-    [[800, 1280], [1, 1.1, 1.25, 1.5]],
+    [[411, 891], [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25]],
+    [[891, 411], [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25]],
+    [[360, 780], [0.3333333333, 0.5, 0.6666666667, 1, 1.1]],
+    [[352, 760], [0.3333333333, 0.5, 0.6666666667, 1, 1.1]],
+    [[351, 760], [0.3333333333, 0.5, 0.6666666667, 1]],
+    [[800, 1280], [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25, 1.5]],
 ]) {
     const page = newPage({ screen, view: screen[0], storage: new Map([[KEY, '1.5']]) });
     page.parse();
@@ -334,7 +341,7 @@ for (const engine of ['ignores', 'wide']) {
         { width: undefined, 'user-scalable': undefined, ...scaled(1) },
         `a size that did not take effect (${engine}) was left in place: ${page.content}`,
     );
-    assert.ok(!page.storage.has(KEY) && page.state().scale === 1 && page.warnings.length === 1,
+    assert.ok(page.storage.get(KEY) === '1' && page.state().scale === 1 && page.warnings.length === 1,
         `a size that did not take effect (${engine}) is tried again on every load: ` +
         JSON.stringify({ stored: page.storage.get(KEY), state: page.state(), warnings: page.warnings }));
 }
@@ -349,12 +356,12 @@ for (const engine of ['ignores', 'wide']) {
         'a page without a viewport element is watched for the rest of its life, or claims a size');
 }
 
-// Anything else stored is no size at all.
+// Anything else stored is no size at all, so the default applies.
 for (const stored of ['abc', '0', '-1', '']) {
     const page = newPage({ storage: new Map([[KEY, stored]]) });
     page.parse();
-    assert.ok(page.state().scale === 1 && page.writes.length === 0,
-        `a stored ${JSON.stringify(stored)} changed the page`);
+    assert.ok(page.state().scale === 0.3333333333 && page.writes.length === 1,
+        `a stored ${JSON.stringify(stored)} did not fall back to the 33% default`);
 }
 
 // ---- the relay and the command -----------------------------------------------
@@ -444,8 +451,11 @@ async function main() {
     // The quick pick offers what the page says this screen allows, marked with
     // the size in force, and the size picked is set, kept and said.
     let r = await run((items) => items.find((i) => i.label === '125%'));
-    assert.deepStrictEqual(labels(r), [['100%', 'current'], ['110%', ''], ['125%', '']],
-        'the quick pick did not offer the sizes the page allows on a 411 dp phone: ' + JSON.stringify(r.picks));
+    assert.deepStrictEqual(
+        labels(r),
+        [['33%', 'current'], ['50%', ''], ['67%', ''], ['100%', ''], ['110%', ''], ['125%', '']],
+        'the quick pick did not offer the sizes the page allows on a 411 dp phone: ' + JSON.stringify(r.picks),
+    );
     assert.ok(
         r.info.length === 1 && r.info[0] === 'UI scale set to 125%.' && r.warning.length + r.error.length === 0,
         'setting 125% did not say so: ' + JSON.stringify(r),
@@ -470,12 +480,16 @@ async function main() {
         assert.ok(!r.rewrote && r.info.length + r.warning.length + r.error.length === 0,
             `picking ${label} changed the page or said something: ` + JSON.stringify(r));
     }
-    assert.deepStrictEqual(labels(r), [['100%', ''], ['110%', ''], ['125%', 'current']],
-        'the quick pick does not mark the size in force');
+    assert.deepStrictEqual(
+        labels(r),
+        [['33%', ''], ['50%', ''], ['67%', ''], ['100%', ''], ['110%', ''], ['125%', 'current']],
+        'the quick pick does not mark the size in force',
+    );
 
-    // 100% is the page as the workbench wrote it, and nothing stays stored.
+    // 100% is the page as the workbench wrote it, and it stays stored so the
+    // next load does not fall back to the 33% default.
     r = await run((items) => items.find((i) => i.label === '100%'));
-    assert.ok(r.info[0] === 'UI scale set to 100%.' && !storage.has(KEY) &&
+    assert.ok(r.info[0] === 'UI scale set to 100%.' && storage.get(KEY) === '1' &&
             keys(page.content)['initial-scale'] === '1',
         'going back to 100% did not take: ' + JSON.stringify([r, storage.get(KEY), page.content]));
 
@@ -485,18 +499,11 @@ async function main() {
     r = await run((items) => items.find((i) => i.label === '110%'));
     assert.ok(
         r.info.length === 0 && r.warning.length === 1 && /110% did not take effect/.test(r.warning[0]) &&
-            !storage.has(KEY) && keys(page.content)['initial-scale'] === '1',
+            storage.get(KEY) === '1' && keys(page.content)['initial-scale'] === '1',
         'a size that did not take effect was reported as set, or left in place: ' +
         JSON.stringify([r, storage.get(KEY), page.content]),
     );
     page.engine = 'webview';
-
-    // A screen with no room for a larger size says so instead of offering 100% alone.
-    page.win.screen = { width: 340, height: 720 };
-    r = await run(() => assert.fail('a screen with nothing to offer was shown a quick pick'));
-    assert.ok(r.info.length === 1 && /too narrow/.test(r.info[0]) && r.picks.length === 0,
-        'a screen too narrow for a larger size was not told so: ' + JSON.stringify(r));
-    page.win.screen = { width: 411, height: 891 };
 
     // Any script on the origin can post here. A size this screen is not offered
     // is refused by the page, which answers with the size in force.
@@ -505,7 +512,7 @@ async function main() {
     raw.onmessage = (e) => { if (e.data && e.data.id === 'raw') answers.push(e.data); };
     raw.postMessage({ cmd: 'setUiScale', id: 'raw', scale: 1.5 });
     await until(() => answers.length > 0, 'a size this screen is not offered was not answered');
-    assert.ok(answers[0].ok === true && answers[0].data === 1 && !storage.has(KEY) &&
+    assert.ok(answers[0].ok === true && answers[0].data === 1 && storage.get(KEY) === '1' &&
             keys(page.content)['initial-scale'] === '1',
         'a size this screen is not offered was applied: ' + JSON.stringify([answers[0], page.content]));
     raw.close();
