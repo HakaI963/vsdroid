@@ -233,12 +233,13 @@ class KeyPageConfigTest {
             for (widthDp in listOf(220, 320, 360, 411, 448, 600)) {
                 val pages = KeyPages.forSmallestWidthDp(widthDp)
                 // The control. An empty list walks no page and reports every key
-                // wide enough, which reads exactly like a row that fits.
-                assertTrue(
-                    pages.size >= KeyPages.defaults.size,
-                    "at ${widthDp}dp the row was paged into ${pages.size} pages, fewer than " +
-                        "the ${KeyPages.defaults.size} written above, so keys have gone " +
-                        "missing and the widths below are measured on what is left",
+                // wide enough, which reads exactly like a row that fits. A wide
+                // row legitimately packs into fewer pages now, so the invariant
+                // is the key list, not the page count.
+                assertEquals(
+                    KeyPages.defaults.flatMap { it.items },
+                    pages.flatMap { it.items },
+                    "at ${widthDp}dp the row lost or reordered a key while repacking",
                 )
                 for ((index, page) in pages.withIndex()) {
                     val shares = page.items.sumOf { item ->
