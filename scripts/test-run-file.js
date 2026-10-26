@@ -27,8 +27,10 @@ async function run(code, { language = 'javascript', file = '/work/a.js', dirty =
     const disposable = () => ({ dispose() {} });
     const vscode = {
         Uri,
+        StatusBarAlignment: { Left: 1, Right: 2 },
         commands: { registerCommand(id, callback) { commands.set(id, callback); return disposable(); } },
         workspace: {
+            getConfiguration: () => ({ inspect: () => undefined, update: async () => {} }),
             fs: { async readFile(uri) {
                 events.push(['read', uri.path]);
                 if (readError) throw readError;
@@ -38,7 +40,8 @@ async function run(code, { language = 'javascript', file = '/work/a.js', dirty =
             getWorkspaceFolder: () => undefined, workspaceFolders: [], textDocuments: [document],
         },
         window: {
-            activeTextEditor: { document }, terminals: [], createStatusBarItem: disposable,
+            activeTextEditor: { document }, terminals: [],
+            createStatusBarItem: () => ({ show() {}, hide() {}, dispose() {} }),
             showInformationMessage: (message) => { events.push(['info', message]); },
             showErrorMessage: (message) => { events.push(['error', message]); },
             createTerminal(options) {
