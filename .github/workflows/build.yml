@@ -440,18 +440,18 @@ jobs:
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v1.5.0-vsdroid
+          TAG: v1.5.1-vsdroid
         run: |
           apk=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
-          cp "$apk" vsdroid-1.5.0-landscape.apk
-          sha256sum vsdroid-1.5.0-landscape.apk > vsdroid-1.5.0-landscape.apk.sha256
-          notes=$(printf 'VSCodroid fork built from %s.\n\n- Locked to landscape (sensorLandscape).\n- Workbench defaults to 33%% UI scale (3x denser); 50/67/100/110/125/150%% remain selectable from **VSCodroid: UI Scale**.\n- arm64-v8a only, signed with the fork release key.' "$(git rev-parse --short HEAD)")
+          cp "$apk" vsdroid-1.5.1-landscape.apk
+          sha256sum vsdroid-1.5.1-landscape.apk > vsdroid-1.5.1-landscape.apk.sha256
+          notes=$(printf 'VSCodroid fork built from %s.\n\n- Fullscreen: Android status and navigation bars hidden; content draws into the display cutout.\n- Key row: 38dp keys packed by the actual landscape width, so Shift and Tab are no longer slabs.\n- UI: defaults to 25%% (4x denser); 20/25/33/50/67/100/110/125/150%% selectable from the Aa button, the status-bar UI item, or **VSCodroid: UI Scale**.\n- VS Code layout: activity bar on top, menu bar hidden, single editor tab.\n- arm64-v8a only, signed with the fork release key.' "$(git rev-parse --short HEAD)")
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" vsdroid-1.5.0-landscape.apk vsdroid-1.5.0-landscape.apk.sha256 --clobber
+            gh release upload "$TAG" vsdroid-1.5.1-landscape.apk vsdroid-1.5.1-landscape.apk.sha256 --clobber
             gh release edit "$TAG" --notes "$notes"
           else
-            gh release create "$TAG" vsdroid-1.5.0-landscape.apk vsdroid-1.5.0-landscape.apk.sha256 \
-              --title "VSDroid 1.5.0 - landscape, 3x denser UI" \
+            gh release create "$TAG" vsdroid-1.5.1-landscape.apk vsdroid-1.5.1-landscape.apk.sha256 \
+              --title "VSDroid 1.5.1 - fullscreen, compact keys, smaller UI" \
               --notes "$notes"
           fi
 

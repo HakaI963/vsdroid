@@ -24,14 +24,14 @@ import com.vscodroid.util.Logger
  * the row. Named rather than repeated: the two sites have to agree or the band
  * moves the moment a modifier is latched.
  */
-private const val DOT_SIZE_DP = 8
+private const val DOT_SIZE_DP = 6
 
 /**
  * Height of the swipeable key pages, which is the larger half of what this row
  * costs the page below it. Named because [ExtraKeyRow.rowHeightPx] has to agree
  * with the layout parameter it is derived from.
  */
-private const val PAGER_HEIGHT_DP = 56
+private const val PAGER_HEIGHT_DP = 38
 
 /**
  * How much page has to survive this row before it is allowed to take any.
@@ -62,7 +62,7 @@ private const val PAGER_HEIGHT_DP = 56
  * includes Ctrl+C. It buys the only thing that makes any of them useful, which is
  * being able to see what they did.
  */
-private const val MIN_PAGE_HEIGHT_DP = 120
+private const val MIN_PAGE_HEIGHT_DP = 90
 
 /**
  * The page height that clears [ExtraKeyRow.suppressedForHeight] again.
@@ -105,18 +105,16 @@ class ExtraKeyRow @JvmOverloads constructor(
     /**
      * The pages this row shows, sized for the window it is in.
      *
-     * A var, because `smallestScreenWidthDp` tracks the ACTIVITY's window and
-     * not the device: dropping a full-screen session into a narrow split-screen
-     * pane lowers it, `MainActivity` declares `smallestScreenSize` in its
-     * `configChanges` so the activity survives that resize, and a row that kept
-     * the page set it was built with went on dividing a much narrower window by
-     * it, putting every key back under [MIN_TOUCH_TARGET_DP] until the activity
-     * was next created. [onConfigurationChanged] repacks it. Rotation does not
-     * reach that, because the smallest side of a screen does not change when it
-     * turns.
+     * A var, because `screenWidthDp` tracks the ACTIVITY's window and not the
+     * device: a split-screen resize lowers it, and rotation swaps it for the
+     * long side. `MainActivity` declares `screenSize` and
+     * `smallestScreenSize` in its `configChanges`, so the activity survives
+     * either without being recreated, and [onConfigurationChanged] repacks.
+     * Packing by the width actually available is what keeps six keys from
+     * stretching across a landscape phone into the slabs Shift and Tab were.
      */
     private var pages: List<KeyPage> =
-        KeyPages.forSmallestWidthDp(resources.configuration.smallestScreenWidthDp)
+        KeyPages.forWidthDp(resources.configuration.screenWidthDp)
 
     private val viewPager: ViewPager2
     private val dotContainer: LinearLayout
@@ -347,8 +345,8 @@ class ExtraKeyRow @JvmOverloads constructor(
             val badgeMetrics = modifierBadge.paint.fontMetricsInt
             minimumHeight = maxOf(dpToPx(DOT_SIZE_DP), badgeMetrics.descent - badgeMetrics.ascent)
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
-                topMargin = dpToPx(2)
-                bottomMargin = dpToPx(4)
+                topMargin = dpToPx(1)
+                bottomMargin = dpToPx(2)
             }
         }
         addView(dotContainer)
@@ -416,6 +414,13 @@ class ExtraKeyRow @JvmOverloads constructor(
     var onImeVisibilityChanged: ((Boolean) -> Unit)? = null
 
     /**
+     * Invoked by the **Aa** button beside the page dots. The row owns the
+     * control because it is the one surface always in reach while typing; the
+     * activity owns the dialog and the WebView it has to reach.
+     */
+    var onUiScaleRequested: (() -> Unit)? = null
+
+    /**
      * Whether the user has turned the row off, with VSCodroid: Toggle Extra Key Row.
      *
      * For typing on a hardware keyboard, which carries every key the row offers,
@@ -461,23 +466,20 @@ class ExtraKeyRow @JvmOverloads constructor(
 
     fun setupWithRootView(rootView: View) {
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
-            // The display cutout is its own inset type, not part of systemBars().
-            // Portrait hides that: the status bar is at least as tall as the
-            // cutout. Landscape does not: the punch-hole sits on a side edge
-            // where systemBars() reports 0, putting the camera over the
-            // activity bar. Combining the types takes the max per edge.
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
+            // The system bars are hidden (drawBehindSystemBars/hideSystemBars),
+            // so their insets are zero. The display cutout is deliberately not
+            // padded here either: this fork draws the editor into the notch and
+            // the WebView's own padding (MainActivity.applyWindowInsetsPadding)
+            // is what keeps Chromium's env(safe-area-inset-*) at zero without
+            // moving the view.
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
 
-            // Pad container: top for status bar, bottom for max(nav bar, keyboard).
-            // This ensures the WebView content area shrinks when the keyboard opens.
-            // The container is a vertical LinearLayout, so this row then takes its
-            // own height out of the WebView rather than covering the page.
-            val bottomInset = maxOf(bars.bottom, ime.bottom)
-            v.setPadding(bars.left, bars.top, bars.right, bottomInset)
+            // Only the keyboard takes space out of the page. The container is a
+            // vertical LinearLayout, so the row takes its own height out of the
+            // WebView rather than covering the page.
+            val bottomInset = ime.bottom
+            v.setPadding(0, 0, 0, bottomInset)
 
             // What the page would be left with if this row took its height too.
             //
@@ -488,7 +490,7 @@ class ExtraKeyRow @JvmOverloads constructor(
             // already updated, which is the same source `dpToPx` resolves against
             // and the same one `pages` is packed from a few lines up.
             val pageHeightPx =
-                resources.displayMetrics.heightPixels - bars.top - bottomInset - rowHeightPx
+                resources.displayMetrics.heightPixels - bottomInset - rowHeightPx
             if (!imeVisible) {
                 suppressedForHeight = false
             } else if (pageHeightPx < dpToPx(MIN_PAGE_HEIGHT_DP)) {
@@ -591,8 +593,8 @@ class ExtraKeyRow @JvmOverloads constructor(
                 }
                 setImageDrawable(drawable)
                 layoutParams = LayoutParams(size, size).apply {
-                    marginStart = dpToPx(4)
-                    marginEnd = dpToPx(4)
+                    marginStart = dpToPx(3)
+                    marginEnd = dpToPx(3)
                 }
                 // One 8dp circle a page, saying which one is showing in colour
                 // and in nothing else. A screen reader stopped on each of them
@@ -608,6 +610,29 @@ class ExtraKeyRow @JvmOverloads constructor(
             modifierBadge,
             LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
                 marginStart = dpToPx(8)
+            },
+        )
+        // A visible way into the size picker. The VS Code command exists, but
+        // it is buried in the Command Palette and this fork's whole point is
+        // that the default size is wrong for the screen. The row is the one
+        // native surface that is always under the thumb while typing.
+        val uiSizeButton = TextView(context).apply {
+            text = context.getString(R.string.key_ui_size_label)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextColor(context.getColor(R.color.colorPrimaryText))
+            includeFontPadding = false
+            gravity = Gravity.CENTER
+            setPadding(dpToPx(8), dpToPx(2), dpToPx(8), dpToPx(2))
+            isClickable = true
+            isFocusable = true
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+            contentDescription = context.getString(R.string.key_ui_size)
+            setOnClickListener { onUiScaleRequested?.invoke() }
+        }
+        dotContainer.addView(
+            uiSizeButton,
+            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                marginStart = dpToPx(12)
             },
         )
         updateDots(0)
@@ -739,24 +764,18 @@ class ExtraKeyRow @JvmOverloads constructor(
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // Before the early return below, not after it, and that ordering is the
-        // whole of it. `smallestScreenWidthDp` is by definition the SMALLER of
-        // the two dimensions, so it does not move when the phone is turned over:
-        // a rotation always repacks to the same pages and always takes that
-        // return. The dismiss therefore never ran on the one configuration change
-        // every user performs. Measured on an API 37 emulator: long press `{}` in
-        // portrait, rotate, and the alternates are left sitting in the middle of
-        // the soft keyboard, a screen's width from the key they belong to, until
-        // the user taps somewhere else.
-        //
-        // The popup is a window anchored to a key that a repack destroys with the
-        // page holding it, and nothing tears it down with that key: the same
-        // reason [onDetachedFromWindow] dismisses it. A rotation that changes
-        // nothing else still moves the key out from under it.
+        // whole of it. A rotation now changes `screenWidthDp` and repacks, but
+        // a density change, a dark-mode switch, or any configuration that leaves
+        // the packing equal still takes that return, and the dismiss has to run
+        // on all of them. The popup is a window anchored to a key that a repack
+        // destroys with the page holding it, and nothing tears it down with that
+        // key: the same reason [onDetachedFromWindow] dismisses it. A rotation
+        // that changes nothing else still moves the key out from under it.
         longPressPopup?.dismiss()
         longPressPopup = null
         val densityChanged = densityDpi != newConfig.densityDpi
         densityDpi = newConfig.densityDpi
-        val repacked = KeyPages.forSmallestWidthDp(newConfig.smallestScreenWidthDp)
+        val repacked = KeyPages.forWidthDp(newConfig.screenWidthDp)
         if (repacked == pages && !densityChanged) return
         val selectedPage = viewPager.currentItem
         pages = repacked
@@ -766,8 +785,8 @@ class ExtraKeyRow @JvmOverloads constructor(
             val metrics = modifierBadge.paint.fontMetricsInt
             dotContainer.minimumHeight = maxOf(dpToPx(DOT_SIZE_DP), metrics.descent - metrics.ascent)
             dotContainer.layoutParams = (dotContainer.layoutParams as LayoutParams).apply {
-                topMargin = dpToPx(2)
-                bottomMargin = dpToPx(4)
+                topMargin = dpToPx(1)
+                bottomMargin = dpToPx(2)
             }
         }
         setupAdapter()
@@ -775,7 +794,7 @@ class ExtraKeyRow @JvmOverloads constructor(
         viewPager.setCurrentItem(selectedPage.coerceAtMost(pages.lastIndex), false)
         requestLayout()
         ViewCompat.requestApplyInsets(this)
-        Logger.d(tag, "Repacked into ${pages.size} pages for ${newConfig.smallestScreenWidthDp}dp")
+        Logger.d(tag, "Repacked into ${pages.size} pages for ${newConfig.screenWidthDp}dp")
     }
 
     /**

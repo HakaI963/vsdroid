@@ -164,6 +164,18 @@ async function installedToolchains(context) {
  */
 function activate(context) {
 
+    // A visible way into the size picker. The command existed, but on a phone
+    // the Command Palette is exactly the thing whose size is wrong. The status
+    // bar is always on screen and one tap opens the same quick pick.
+    const uiScaleStatus = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Right,
+        100
+    );
+    uiScaleStatus.command = 'vscodroid.uiScale';
+    uiScaleStatus.text = '$(settings-gear) UI';
+    uiScaleStatus.tooltip = 'Change the size of the whole interface';
+    uiScaleStatus.show();
+
     // -- Open Folder from Device --
 
     const openFolderCmd = vscode.commands.registerCommand(
@@ -618,6 +630,7 @@ function activate(context) {
             // The page answers with the size in force, which is 100% when the one
             // picked did not take effect on this device.
             const now = await sendBridgeCommand('setUiScale', { scale: picked.scale });
+            void refreshUiScaleStatus(uiScaleStatus);
             if (now === picked.scale) {
                 vscode.window.showInformationMessage(`UI scale set to ${picked.label}.`);
             } else {
@@ -913,6 +926,7 @@ function activate(context) {
     });
 
     context.subscriptions.push(
+        uiScaleStatus,
         workspaceFoldersListener,
         openFolderCmd,
         recentFolderCmd,
@@ -931,6 +945,53 @@ function activate(context) {
         bugReportCmd,
         runFileCmd
     );
+
+    void refreshUiScaleStatus(uiScaleStatus);
+    void applyMobileDefaults();
+}
+
+/**
+ * Puts the current size on the status bar entry.
+ * @param {vscode.StatusBarItem} item
+ */
+async function refreshUiScaleStatus(item) {
+    try {
+        const { scale } = /** @type {{ scale: number }} */ (
+            await sendBridgeCommand('getUiScale')
+        );
+        item.text = `$(settings-gear) ${Math.round(scale * 100)}%`;
+    } catch {
+        item.text = '$(settings-gear) UI';
+    }
+}
+
+/**
+ * One-time layout defaults for a phone in landscape.
+ *
+ * These are written as user settings only when the user has not set them
+ * already, so changing one is not undone on the next start. The activity bar
+ * moves to the top (a 48px column is a lot of a landscape phone's height), the
+ * menu bar goes away (the Command Palette is the menu that works with a
+ * fingertip), and only the active editor tab is shown.
+ */
+async function applyMobileDefaults() {
+    /** @type {Record<string, string>} */
+    const defaults = {
+        'workbench.activityBar.location': 'top',
+        'window.menuBarVisibility': 'hidden',
+        'workbench.editor.showTabs': 'single'
+    };
+    for (const [key, value] of Object.entries(defaults)) {
+        try {
+            const config = vscode.workspace.getConfiguration();
+            const inspected = config.inspect(key);
+            if (!inspected) continue;
+            if (inspected.globalValue !== undefined || inspected.workspaceValue !== undefined) continue;
+            await config.update(key, value, vscode.ConfigurationTarget.GLOBAL);
+        } catch {
+            // A setting this build does not register is not worth a warning.
+        }
+    }
 }
 
 function deactivate() {

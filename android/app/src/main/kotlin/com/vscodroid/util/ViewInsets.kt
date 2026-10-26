@@ -7,6 +7,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import kotlin.math.pow
 
 /**
@@ -92,7 +93,23 @@ fun View.padForSystemBars(basePx: Int = 0) {
  */
 fun Activity.drawBehindSystemBars() {
     WindowCompat.setDecorFitsSystemWindows(window, false)
+    hideSystemBars()
+}
+
+/**
+ * Hides the status and navigation bars for an immersive, full-screen window.
+ *
+ * The bars come back as a transient overlay when the user swipes from an edge
+ * and go away again by themselves. Every activity calls this from
+ * [drawBehindSystemBars] and again when it regains window focus, because a
+ * permission dialog or a notification shade visit leaves the bars visible and
+ * the focus callback is the only reliable place to put them back.
+ */
+fun Activity.hideSystemBars() {
     WindowCompat.getInsetsController(window, window.decorView).apply {
+        hide(WindowInsetsCompat.Type.systemBars())
+        systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         isAppearanceLightStatusBars = false
         isAppearanceLightNavigationBars = false
     }

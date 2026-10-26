@@ -254,7 +254,7 @@ object KeyPages {
     )
 
     /**
-     * [defaults], repacked so that no key on a row [smallestWidthDp] dp wide is
+     * [defaults], repacked so that no key on a row [widthDp] dp wide is
      * narrower than [MIN_TOUCH_TARGET_DP].
      *
      * That holds at every width, not only at the ones a phone has. The single
@@ -268,10 +268,13 @@ object KeyPages {
      * at 320dp it is 37.6dp. Every key of every page is affected, on the control
      * this app's whole touch story rests on, so the fix cannot be per key.
      *
-     * The argument is `smallestScreenWidthDp` rather than the current width,
-     * deliberately. Rotating does not move it, so a phone turned on its side
-     * keeps the portrait page count and gets keys wider than they need to be,
-     * which is the harmless direction to be wrong in and costs no rebuild.
+     * The argument is the width the row actually has, not
+     * `smallestScreenWidthDp`. This fork is landscape-only, and on a landscape
+     * phone the smallest side is the 411dp portrait width while the row is
+     * about 891dp wide; packing for the smaller number left six to eight keys
+     * stretched across the whole row, which is what made Shift and Tab
+     * enormous. Repacking on rotation is now wanted, and
+     * [ExtraKeyRow.onConfigurationChanged] does it.
      *
      * Multi-window is the direction that is not harmless. The value tracks the
      * ACTIVITY's window, not the device, so dropping a full-screen session into
@@ -297,7 +300,7 @@ object KeyPages {
      * a page of shortcuts that is no longer a page. Packed alone, six keys fit
      * one page at every width from 288dp, which is every phone.
      */
-    fun forSmallestWidthDp(smallestWidthDp: Int): List<KeyPage> {
+    fun forWidthDp(widthDp: Int): List<KeyPage> {
         // A width that cannot belong to a device is no information, not an
         // instruction to put one key on a page: `Configuration` reports
         // SMALLEST_SCREEN_WIDTH_DP_UNDEFINED, which is 0, for a value it has not
@@ -315,14 +318,30 @@ object KeyPages {
         // goes on dividing the width it actually has, which puts every key back
         // under [MIN_TOUCH_TARGET_DP] in exactly the case this function exists
         // for, and does it silently.
-        val widthDp = if (smallestWidthDp <= 0) 320 else smallestWidthDp
-        val maxTenths = widthDp * 10 / MIN_TOUCH_TARGET_DP
-        if (defaults.all { page -> page.items.sumOf { it.weightTenths() } <= maxTenths }) {
+        val width = if (widthDp <= 0) 320 else widthDp
+        val maxTenths = width * 10 / MIN_TOUCH_TARGET_DP
+        // Up to a portrait phone's width the authored pages are kept exactly as
+        // they were. Above it the row is wider than the pages were drawn for, and
+        // returning them unchanged is what stretched eight keys across a
+        // landscape phone. Packing there merges the pages until each key is back
+        // near the touch target, which is the whole point of packing by the
+        // width actually available.
+        if (width <= 411 && defaults.all { page -> page.items.sumOf { it.weightTenths() } <= maxTenths }) {
             return defaults
         }
         val flowing = defaults.filter { it !== quickActions }.flatMap { it.items }
         return pack(flowing, maxTenths) + pack(quickActions.items, maxTenths)
     }
+
+    /**
+     * The pages for a row whose smallest side is [smallestWidthDp] dp.
+     *
+     * Kept for the callers and tests that describe a screen by its smallest
+     * side. The row itself packs by the width it actually has ([forWidthDp]),
+     * because this fork is landscape-only and the long side is where the keys
+     * are stretched.
+     */
+    fun forSmallestWidthDp(smallestWidthDp: Int): List<KeyPage> = forWidthDp(smallestWidthDp)
 
     /** [items] in order, on as few pages as keep each under [maxTenths]. */
     private fun pack(items: List<KeyItem>, maxTenths: Int): List<KeyPage> {

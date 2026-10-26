@@ -10,6 +10,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.play.core.assetpacks.model.AssetPackStatus
 import com.vscodroid.setup.ToolchainManager
 import com.vscodroid.util.drawBehindSystemBars
+import com.vscodroid.util.hideSystemBars
 import com.vscodroid.util.padForSystemBars
 import com.vscodroid.setup.ToolchainAction
 import com.vscodroid.setup.ToolchainCardMode
@@ -145,6 +146,16 @@ class ToolchainActivity : AppCompatActivity() {
             refreshDownloads()
             grid.postDelayed(this, DOWNLOAD_POLL_MS)
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideSystemBars()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

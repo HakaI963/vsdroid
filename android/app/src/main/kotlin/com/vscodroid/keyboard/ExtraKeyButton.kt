@@ -210,11 +210,11 @@ class ExtraKeyButton @JvmOverloads constructor(
 
     init {
         gravity = Gravity.CENTER
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
         typeface = Typeface.MONOSPACE
         maxLines = 1
-        minWidth = dpToPx(48)
-        minimumHeight = dpToPx(56)
+        minWidth = dpToPx(36)
+        minimumHeight = dpToPx(38)
         isClickable = true
         isFocusable = false
 
@@ -227,7 +227,7 @@ class ExtraKeyButton @JvmOverloads constructor(
         // API 27 and above, and minSdk here is 30, so the compatibility branch
         // below that is never taken.
         TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
-            this, 8, 13, 1, TypedValue.COMPLEX_UNIT_SP
+            this, 7, 12, 1, TypedValue.COMPLEX_UNIT_SP
         )
 
         // Rounded corner background. This is also what applies the key's
@@ -350,7 +350,7 @@ class ExtraKeyButton @JvmOverloads constructor(
      * the gap moved off the layout params.
      */
     private fun applyKeyPadding() {
-        setPadding(dpToPx(4 + KEY_GAP_DP), dpToPx(6), dpToPx(4 + KEY_GAP_DP), dpToPx(6))
+        setPadding(dpToPx(3 + KEY_GAP_DP), dpToPx(3), dpToPx(3 + KEY_GAP_DP), dpToPx(3))
     }
 
     private fun dpToPx(dp: Int): Int =

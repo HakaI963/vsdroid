@@ -26,6 +26,7 @@ import com.vscodroid.setup.ToolchainPickerAdapter
 import com.vscodroid.setup.ToolchainRegistry
 import com.vscodroid.storage.SafStorageManager
 import com.vscodroid.util.drawBehindSystemBars
+import com.vscodroid.util.hideSystemBars
 import com.vscodroid.util.isLightColor
 import com.vscodroid.util.Logger
 import com.vscodroid.util.padForSystemBars
@@ -83,6 +84,16 @@ class SplashActivity : AppCompatActivity() {
         val progressBar: ProgressBar,
         val statusText: TextView,
     )
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideSystemBars()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Before super.onCreate(), as the call it replaces required.

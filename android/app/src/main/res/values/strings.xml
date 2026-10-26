@@ -588,6 +588,13 @@
     <string name="key_toggle_on">on</string>
     <string name="key_toggle_off">off</string>
 
+    <!-- The Aa button beside the page dots that opens the interface-size picker. -->
+    <string name="key_ui_size">UI size</string>
+    <string name="key_ui_size_label" translatable="false">Aa</string>
+    <string name="ui_size_title">Interface size</string>
+    <string name="ui_size_applied">Interface size set to %1$d%%</string>
+    <string name="ui_size_failed">This WebView kept %1$d%%</string>
+
     <!-- The trackpad, and the four arrows it offers to an assistive service.
          A drag is the only other way to reach them and touch exploration takes
          the gesture stream first, so these labels are the whole of that route:

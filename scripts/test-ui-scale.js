@@ -249,13 +249,13 @@ for (const [label, where] of [
     assert.ok(page.hook, 'the workbench page has no hook, so the command has nothing to talk to');
     assert.deepStrictEqual(
         page.state(),
-        { scale: 0.3333333333, choices: [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25] },
-        'a 411 dp phone with nothing chosen must be at 33% and offered 33, 50, 67, 100, 110 and 125%',
+        { scale: 0.25, choices: [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25] },
+        'a 411 dp phone with nothing chosen must be at 25% and offered 20, 25, 33, 50, 67, 100, 110 and 125%',
     );
-    assert.ok(page.writes.length === 1 && page.state().scale === 0.3333333333 &&
+    assert.ok(page.writes.length === 1 && page.state().scale === 0.25 &&
             page.warnings.length === 0,
         'the default size was not applied once, or was undone: ' + JSON.stringify(page.writes));
-    assert.strictEqual(keys(page.content)['initial-scale'], '0.3333333333',
+    assert.strictEqual(keys(page.content)['initial-scale'], '0.25',
         'the default size did not reach the viewport element: ' + page.content);
 }
 
@@ -308,12 +308,12 @@ for (const [label, where] of [
 // cannot make it narrower than that. A size chosen on a wider screen is kept and
 // the largest this one allows is applied.
 for (const [screen, choices] of [
-    [[411, 891], [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25]],
-    [[891, 411], [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25]],
-    [[360, 780], [0.3333333333, 0.5, 0.6666666667, 1, 1.1]],
-    [[352, 760], [0.3333333333, 0.5, 0.6666666667, 1, 1.1]],
-    [[351, 760], [0.3333333333, 0.5, 0.6666666667, 1]],
-    [[800, 1280], [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25, 1.5]],
+    [[411, 891], [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25]],
+    [[891, 411], [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25]],
+    [[360, 780], [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1, 1.1]],
+    [[352, 760], [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1, 1.1]],
+    [[351, 760], [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1]],
+    [[800, 1280], [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25, 1.5]],
 ]) {
     const page = newPage({ screen, view: screen[0], storage: new Map([[KEY, '1.5']]) });
     page.parse();
@@ -360,8 +360,8 @@ for (const engine of ['ignores', 'wide']) {
 for (const stored of ['abc', '0', '-1', '']) {
     const page = newPage({ storage: new Map([[KEY, stored]]) });
     page.parse();
-    assert.ok(page.state().scale === 0.3333333333 && page.writes.length === 1,
-        `a stored ${JSON.stringify(stored)} did not fall back to the 33% default`);
+    assert.ok(page.state().scale === 0.25 && page.writes.length === 1,
+        `a stored ${JSON.stringify(stored)} did not fall back to the 25% default`);
 }
 
 // ---- the relay and the command -----------------------------------------------
@@ -370,6 +370,7 @@ const vscodeCalls = { info: [], warning: [], error: [], picks: [] };
 let pick = () => undefined;
 const commands = new Map();
 const vscodeStub = {
+    StatusBarAlignment: { Left: 1, Right: 2 },
     commands: {
         registerCommand: (id, fn) => { commands.set(id, fn); return { dispose() {} }; },
         executeCommand: async () => {},
@@ -453,7 +454,10 @@ async function main() {
     let r = await run((items) => items.find((i) => i.label === '125%'));
     assert.deepStrictEqual(
         labels(r),
-        [['33%', 'current'], ['50%', ''], ['67%', ''], ['100%', ''], ['110%', ''], ['125%', '']],
+        [
+            ['20%', ''], ['25%', 'current'], ['33%', ''], ['50%', ''],
+            ['67%', ''], ['100%', ''], ['110%', ''], ['125%', ''],
+        ],
         'the quick pick did not offer the sizes the page allows on a 411 dp phone: ' + JSON.stringify(r.picks),
     );
     assert.ok(
@@ -482,12 +486,15 @@ async function main() {
     }
     assert.deepStrictEqual(
         labels(r),
-        [['33%', ''], ['50%', ''], ['67%', ''], ['100%', ''], ['110%', ''], ['125%', 'current']],
+        [
+            ['20%', ''], ['25%', ''], ['33%', ''], ['50%', ''],
+            ['67%', ''], ['100%', ''], ['110%', ''], ['125%', 'current'],
+        ],
         'the quick pick does not mark the size in force',
     );
 
     // 100% is the page as the workbench wrote it, and it stays stored so the
-    // next load does not fall back to the 33% default.
+    // next load does not fall back to the 25% default.
     r = await run((items) => items.find((i) => i.label === '100%'));
     assert.ok(r.info[0] === 'UI scale set to 100%.' && storage.get(KEY) === '1' &&
             keys(page.content)['initial-scale'] === '1',

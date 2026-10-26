@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import androidx.activity.OnBackPressedCallback
 import com.vscodroid.util.drawBehindSystemBars
+import com.vscodroid.util.hideSystemBars
 import com.vscodroid.util.isLightColor
 import com.vscodroid.util.paintWindow
 import com.vscodroid.util.CrashReporter
@@ -831,8 +832,16 @@ class MainActivity : AppCompatActivity() {
         receiveCallbackIntent(intent)
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // A permission dialog, the notification shade or the recents switch
+        // brings the system bars back; regaining focus is where they go away.
+        if (hasFocus) hideSystemBars()
+    }
+
     override fun onResume() {
         super.onResume()
+        hideSystemBars()
         // The warm half of the repair in onCreate. This activity is singleTask,
         // so a launcher tap on a live task brings it forward without creating
         // it, and a callback intent lands in onNewIntent; neither passes
@@ -2147,6 +2156,11 @@ class MainActivity : AppCompatActivity() {
             // documents that begin loading after it was added, and the object a
             // page posts to is there only in those. The view recreateWebView
             // builds comes through here as well.
+            addDefaultUiScaleScript(
+                wv,
+                (workspacePrefs.getString(KEY_UI_SCALE, null)?.toDoubleOrNull() ?: 0.25)
+                    .toString()
+            )
             addUiScaleScript(wv)
             addPlainTextPageScript(wv)
             addPageColorListener(wv, ::showPageColor)
@@ -2417,6 +2431,78 @@ class MainActivity : AppCompatActivity() {
             webView?.evaluateJavascript("window.__vscodroidImeVisible = $visible;", null)
             if (!visible) keyboardDismissal.hidden()
         }
+        extraKeyRow?.onUiScaleRequested = { showUiScaleDialog() }
+    }
+
+    /**
+     * The native size picker, reached from the Aa button beside the key row's
+     * page dots.
+     *
+     * The VS Code command still exists and still works, but it is two taps deep
+     * in a palette on a screen whose whole problem is that the palette is hard
+     * to read. This asks the page for the size in force, then offers the same
+     * set the script accepts.
+     */
+    private fun showUiScaleDialog() {
+        val wv = webView ?: return
+        wv.evaluateJavascript(
+            "(window.__vscodroidUiScale && window.__vscodroidUiScale.state) " +
+                "? window.__vscodroidUiScale.state().scale : null"
+        ) { result ->
+            val stored = workspacePrefs.getString(KEY_UI_SCALE, null)?.toDoubleOrNull() ?: 0.25
+            val current = result?.trim('"')?.toDoubleOrNull() ?: stored
+            showUiScaleDialog(current)
+        }
+    }
+
+    private fun showUiScaleDialog(current: Double) {
+        val choices = doubleArrayOf(
+            0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1.0, 1.1, 1.25, 1.5
+        )
+        val labels = arrayOf(
+            "20%", "25% (default)", "33%", "50%", "67%",
+            "100%", "110%", "125%", "150%",
+        )
+        val checked = choices.indices.minByOrNull { kotlin.math.abs(choices[it] - current) } ?: 1
+        AlertDialog.Builder(this)
+            .setTitle(R.string.ui_size_title)
+            .setSingleChoiceItems(labels, checked) { dialog, which ->
+                val scale = choices[which]
+                workspacePrefs.edit { putString(KEY_UI_SCALE, scale.toString()) }
+                applyUiScale(scale)
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Asks the page to change size and says what actually took effect.
+     *
+     * The callback is the page's own verdict: the script puts a size the WebView
+     * refused back to 100% and answers with the size in force, so a Toast that
+     * repeated the request would lie on exactly the device that needs to know.
+     */
+    private fun applyUiScale(scale: Double) {
+        val wv = webView ?: return
+        wv.evaluateJavascript(
+            "window.__vscodroidUiScale && window.__vscodroidUiScale.set(" +
+                "$scale, function(v) { window.__vscodroidUiScaleApplied = v; });",
+            null
+        )
+        wv.postDelayed({
+            if (webView !== wv) return@postDelayed
+            wv.evaluateJavascript("window.__vscodroidUiScaleApplied") { result ->
+                val applied = result?.trim('"')?.toDoubleOrNull()
+                val percent = ((applied ?: scale) * 100).toInt()
+                val ok = applied != null && kotlin.math.abs(applied - scale) < 0.01
+                Toast.makeText(
+                    this,
+                    getString(if (ok) R.string.ui_size_applied else R.string.ui_size_failed, percent),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }, 600)
     }
 
     /**
@@ -7080,6 +7166,9 @@ class MainActivity : AppCompatActivity() {
         /** Whether the user has hidden the Extra Key Row. Absent means shown. */
         private const val KEY_EXTRA_KEY_ROW_HIDDEN = "extra_key_row_hidden"
 
+        /** The last size chosen from the native Aa dialog, seeded into a new origin. */
+        private const val KEY_UI_SCALE = "ui_scale"
+
         /** The WebView version the user was last warned is below the floor. */
         private const val KEY_WEBVIEW_WARNED = "webview_below_minimum_warned"
 
@@ -8078,6 +8167,31 @@ internal fun connectionHealthProbe(): String =
  * WebView is set up. The script returns at once anywhere but the top frame at `/`
  * on the loopback address.
  */
+/**
+ * Seeds the page's stored size with the one the native size dialog last chose.
+ *
+ * The workbench keeps the size in localStorage, which is per origin, and the
+ * server's port changes between starts. Without this, a size chosen in the
+ * native dialog survives only until the port moves and then falls back to the
+ * compiled default. The seed runs before [uiScaleScript] and only writes when
+ * nothing is stored, so a size chosen from the Command Palette still wins.
+ */
+private fun addDefaultUiScaleScript(webView: WebView, scale: String) {
+    if (!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) return
+    try {
+        WebViewCompat.addDocumentStartJavaScript(
+            webView,
+            "(function(){if(window.top!==window||location.pathname!=='/'||" +
+                "(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'))return;" +
+                "try{if(localStorage.getItem('vscodroid.uiScale')===null)" +
+                "localStorage.setItem('vscodroid.uiScale','$scale');}catch(e){}})();",
+            setOf("*")
+        )
+    } catch (e: RuntimeException) {
+        Logger.w("MainActivity", "Could not seed the UI scale: ${e.message}")
+    }
+}
+
 internal fun addUiScaleScript(webView: WebView) {
     if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
         try {
@@ -8102,18 +8216,20 @@ internal fun uiScaleScript(): String =
         if (window.top !== window || location.pathname !== '/' ||
             (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost')) return;
         var KEY = 'vscodroid.uiScale';
-        // 1/3 is the default on this fork: the workbench's chrome is drawn for a
-        // desktop pointer, and at 100% a phone in landscape still loses most of
-        // its menus off the right edge. At 0.333 the page is laid out three
-        // times as wide and drawn at a third of the size, which is what fits the
-        // whole workbench on the screen. The larger sizes stay available for
-        // anyone who wants the old density back.
-        var SCALES = [0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25, 1.5];
-        var DEFAULT_SCALE = 0.3333333333;
+        // 25% is the default on this fork: the workbench's chrome is drawn for a
+        // desktop pointer, and even at 100% a phone in landscape loses most of
+        // its menus off the right edge. At 0.25 the page is laid out four times
+        // as wide and drawn at a quarter of the size, which is what fits the
+        // whole workbench on the screen. 20% is there for a small phone and the
+        // larger sizes stay available for anyone who wants the old density back.
+        var SCALES = [0.2, 0.25, 0.3333333333, 0.5, 0.6666666667, 1, 1.1, 1.25, 1.5];
+        var DEFAULT_SCALE = 0.25;
         // The narrowest the page may get at a size offered, in CSS px. At 329, a
         // 411 dp phone at 125%, the editor beside an open side bar was 111 wide.
         var MIN_WIDTH = 320;
         var current = 1;
+        // Which size the CSS-zoom fallback is drawing at, or 1 when it is off.
+        var cssZoom = 1;
 
         // The sizes that keep the page at least MIN_WIDTH wide on this screen,
         // by its narrower side, since turning the phone does not reload the page.
@@ -8122,9 +8238,37 @@ internal fun uiScaleScript(): String =
             return SCALES.filter(function(s) { return s === 1 || narrow / s >= MIN_WIDTH; });
         }
 
+        // Undoes the CSS-zoom fallback before the viewport is asked again.
+        function clearCssZoom() {
+            if (cssZoom === 1) return;
+            var root = document.documentElement;
+            root.style.zoom = '';
+            root.style.width = '';
+            root.style.height = '';
+            root.style.overflow = '';
+            cssZoom = 1;
+        }
+
+        // The fallback for a WebView that refuses a page scale below 1. Chromium
+        // honours CSS zoom where it clamps initial-scale, and widening the root
+        // by the reciprocal keeps the workbench's 100%-sized layout filling the
+        // screen instead of leaving a band on the right. Only used under 0.5:
+        // the sizes at and above it have worked through the viewport.
+        function applyCssZoom(s) {
+            var root = document.documentElement;
+            if (!root || !document.body) return false;
+            root.style.zoom = String(s);
+            root.style.width = (100 / s) + '%';
+            root.style.height = (100 / s) + '%';
+            root.style.overflow = 'hidden';
+            cssZoom = s;
+            return true;
+        }
+
         // Sets the scale keys of the page's own viewport element to s and keeps
         // every other key, viewport-fit included. False while there is none.
         function apply(s) {
+            clearCssZoom();
             var meta = document.querySelector('meta[name="viewport"]');
             if (!meta) return false;
             var keep = (meta.getAttribute('content') || '').split(',').map(function(p) {
@@ -8155,11 +8299,16 @@ internal fun uiScaleScript(): String =
         function settle(s, done) {
             requestAnimationFrame(function() {
                 requestAnimationFrame(function() {
-                    if (s === current && s !== 1 && !tookEffect(s)) {
-                        console.warn('[VSCodroid] UI scale ' + s + ' did not take effect, back to 100%');
-                        localStorage.setItem(KEY, '1');
-                        current = 1;
-                        apply(1);
+                    if (s === current && s !== 1 && cssZoom !== s && !tookEffect(s)) {
+                        if (s < 0.5 && applyCssZoom(s)) {
+                            console.warn('[VSCodroid] viewport scale ' + s +
+                                ' did not take effect; using CSS zoom');
+                        } else {
+                            console.warn('[VSCodroid] UI scale ' + s + ' did not take effect, back to 100%');
+                            localStorage.setItem(KEY, '1');
+                            current = 1;
+                            apply(1);
+                        }
                     }
                     done(current);
                 });
