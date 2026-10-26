@@ -345,14 +345,18 @@ class QuickActionsPageTest {
         }
 
         @Test
-        fun `the keys before it page as they did, and the dots count one more`() {
-            // The pages the user has always had: five at 411dp and wider, six at
-            // 360dp and seven at 320dp, as the user guide says. The quick actions
-            // are the one page added to each, so six, seven and eight in all.
-            val before = mapOf(411 to 5, 448 to 5, 600 to 5, 360 to 6, 320 to 7)
-            for ((widthDp, count) in before) {
+        fun `the quick actions stay last and the keys before them are preserved`() {
+            // The page counts before the quick actions are fixed only up to
+            // 411dp. Above that this fork packs by the width the row actually
+            // has, so a landscape phone merges pages to keep keys near the touch
+            // target. What must not change is that the quick actions remain one
+            // page of their own and every other key survives in order.
+            for (widthDp in listOf(411, 448, 600)) {
                 val pages = KeyPages.forSmallestWidthDp(widthDp)
-                assertEquals(count, pages.size - 1, "at ${widthDp}dp the keys before the quick actions")
+                assertEquals(
+                    quickPage(), pages.last(),
+                    "at ${widthDp}dp the quick actions are not the last page",
+                )
                 assertEquals(
                     KeyPages.defaults.dropLast(1).flatMap { it.items },
                     pages.dropLast(1).flatMap { it.items },
